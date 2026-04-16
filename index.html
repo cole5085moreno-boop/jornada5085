@@ -1,392 +1,561 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  BookOpen, FileText, Users, Image as ImageIcon, Menu, X, 
-  ChevronRight, ExternalLink, Heart, Shield, Lightbulb, 
-  Calendar, Download, PlayCircle, CheckCircle2, ZoomIn 
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jornada de Acuerdos de Convivencia - Colegio Secundario Nº 5085</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: {
+                            900: '#1e3a8a',
+                            800: '#1e40af',
+                            700: '#1d4ed8',
+                            600: '#2563eb',
+                            500: '#3b82f6',
+                            400: '#60a5fa',
+                            100: '#dbeafe',
+                            50: '#eff6ff',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .slide-up { animation: slideUp 0.6s ease-out; }
+        .slide-in-left { animation: slideInLeft 0.4s ease-out; }
+        .scale-in { animation: scaleIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .float-animation { animation: float 4s ease-in-out infinite; }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.05); }
+        .group:hover .group-hover\:scale-110 { transform: scale(1.1); }
+        .group:hover .group-hover\:opacity-100 { opacity: 1; }
+        .group:hover .group-hover\:translate-y-0 { transform: translateY(0); }
+        .lightbox { display: none; }
+        .lightbox.active { display: flex; }
+        ::selection { background-color: #dbeafe; color: #1e3a8a; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
 
-const SCHOOL_LOGO = "https://images4.imagebam.com/ad/a4/9c/ME1C83QR_o.png";
-const HERO_IMAGE = "https://images4.imagebam.com/fc/f1/65/ME1C83WU_o.png";
-
-const DRIVE_LINKS = {
-  agreement: "https://drive.google.com/file/d/1EDjvRnSooKPfLru5vbMaauJYZ3a0GvIr/view?usp=sharing",
-  report: "https://drive.google.com/file/d/1WeEfOx4G6MKDlUkdlkyAoQUjggFLkuqu/view?usp=sharing",
-  activities: "https://drive.google.com/file/d/1AsNcLWHZ6RPBl7pCQpvfWQXINeksYQwZ/view?usp=sharing",
-  photos: "https://drive.google.com/drive/folders/1OvhVNqp7dBnrmXxDOGihXf_7X69yuVQ6?usp=sharing"
-};
-
-const AGREEMENT_SUMMARY = [
-  {
-    title: "Actos y Símbolos Patrios",
-    icon: <Shield className="w-6 h-6 text-blue-600" />,
-    points: [
-      "Respetar símbolos patrios y entonar el Himno Nacional.",
-      "Fomentar el buen comportamiento en ceremonias.",
-      "No consumir alimentos durante los actos."
-    ]
-  },
-  {
-    title: "Patrimonio Escolar",
-    icon: <BookOpen className="w-6 h-6 text-blue-600" />,
-    points: [
-      "Cuidar y conservar los bienes del patrimonio escolar.",
-      "Reponer económicamente lo dañado intencionalmente.",
-      "Asegurar motos/bicicletas (no ingresan al edificio)."
-    ]
-  },
-  {
-    title: "Convivencia Digital",
-    icon: <Lightbulb className="w-6 h-6 text-blue-600" />,
-    points: [
-      "Prohibida la difusión de material que perjudique a la comunidad.",
-      "Sanciones severas por grabación de peleas o burlas.",
-      "Uso de celulares solo con fines pedagógicos autorizados."
-    ]
-  },
-  {
-    title: "Presentación y Asistencia",
-    icon: <Users className="w-6 h-6 text-blue-600" />,
-    points: [
-      "Uniforme obligatorio (detallado para señoritas y varones).",
-      "Puntualidad: Turno Mañana 7:45 / Tarde 13:30.",
-      "No uso de gorras, capuchas, ni adornos llamativos."
-    ]
-  }
-];
-
-const CYCLE_ACTIVITIES = {
-  basico: [
-    { module: "Módulo 1", title: "Revisión del Acuerdo", desc: "Análisis crítico de normas actuales. Caso: Grabación viral sin consentimiento.", goal: "Proponer adecuaciones para el bienestar escolar." },
-    { module: "Módulo 2", title: "Resolución de Conflictos", desc: "Role-playing sobre casos reales (exclusión, hostilidad deportiva).", goal: "Desarrollar habilidades para la resolución pacífica." },
-    { module: "Módulo 3", title: "El Camino de las Emociones", desc: "Tarjetas de emociones (ira, vergüenza) ante situaciones cotidianas.", goal: "Reconocer y regular emociones intensas." }
-  ],
-  orientado: [
-    { module: "Módulo 1", title: "Construyendo Resiliencia", desc: "Análisis de fracaso académico y rechazo laboral. Reestructuración cognitiva.", goal: "Fortalecer tolerancia a la frustración." },
-    { module: "Módulo 2", title: "La Isla de los Talentos", desc: "Dinámica de supervivencia asignando roles según fortalezas individuales.", goal: "Fomentar autoconfianza y trabajo en equipo." },
-    { module: "Módulo 3", title: "Mi Proyecto de Vida", desc: "Redacción de plan de vida: Identidad, entorno, metas y apoyos.", goal: "Integrar lo aprendido en un plan futuro." }
-  ]
-};
-
-const PROPOSALS = [
-  "Actividades de reparación/remediales con sentido de aprendizaje.",
-  "Carta de intención o compromiso formal tras faltas graves.",
-  "Prevención específica del ciberacoso y violencia digital."
-];
-
-const Header = ({ activeTab, setActiveTab }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navItems = [
-    { id: 'home', label: 'Inicio', icon: <Calendar size={18} /> },
-    { id: 'agreement', label: 'Acuerdo 2026', icon: <FileText size={18} /> },
-    { id: 'activities', label: 'La Jornada', icon: <Users size={18} /> },
-    { id: 'report', label: 'Informe', icon: <CheckCircle2 size={18} /> },
-    { id: 'gallery', label: 'Galería', icon: <ImageIcon size={18} /> },
-  ];
-
-  return (
-    <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-sm z-50 border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <img src={SCHOOL_LOGO} alt="Logo Colegio" className="h-14 w-auto object-contain" />
-            <div className="hidden md:block">
-              <h1 className="text-sm font-bold text-slate-800 leading-tight">Colegio Secundario Nº5085</h1>
-              <p className="text-xs text-slate-500">"Dr. Mariano Moreno"</p>
-            </div>
-          </div>
-          <nav className="hidden md:flex space-x-1">
-            {navItems.map((item) => (
-              <button key={item.id} onClick={() => setActiveTab(item.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'}`}>
-                {item.icon} {item.label}
-              </button>
-            ))}
-          </nav>
-          <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-slate-600">
-              {isMenuOpen ? <X /> : <Menu />}
-            </button>
-          </div>
-        </div>
-      </div>
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="md:hidden bg-white border-b border-slate-200 overflow-hidden">
-            <div className="px-4 pt-2 pb-6 space-y-2">
-              {navItems.map((item) => (
-                <button key={item.id} onClick={() => { setActiveTab(item.id); setIsMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium ${activeTab === item.id ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                  {item.icon} {item.label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
-  );
-};
-
-const ImageLightbox = ({ isOpen, onClose, imageUrl }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-pointer" onClick={onClose}>
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ duration: 0.3 }} className="relative w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-          <img src={imageUrl} alt="Vista completa" className="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-2xl" />
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors">
-            <X size={24} />
-          </button>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
-
-const HeroSection = ({ setActiveTab }) => {
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  return (
-    <>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-center lg:text-left order-2 lg:order-1">
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="inline-block mb-6 p-1 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
-                <span className="px-4 py-1 text-sm font-semibold tracking-wide uppercase text-blue-100">Jornada Abril 2026</span>
-              </motion.div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
-                Acuerdos de <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-cyan-200">Convivencia Institucional</span>
-              </h1>
-              <p className="mt-4 text-lg text-blue-100 mb-8 max-w-2xl mx-auto lg:mx-0">
-                Construyendo una comunidad educativa basada en el respeto, la empatía y el desarrollo de habilidades socioemocionales en el Colegio Dr. Mariano Moreno.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <button onClick={() => setActiveTab('agreement')} className="px-8 py-4 bg-white text-blue-900 rounded-lg font-bold hover:bg-blue-50 transition-colors shadow-lg flex items-center justify-center gap-2 group">
-                  Ver Acuerdo 2026 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button onClick={() => setActiveTab('activities')} className="px-8 py-4 bg-blue-700/50 backdrop-blur-sm border border-blue-400/30 text-white rounded-lg font-bold hover:bg-blue-700/70 transition-colors flex items-center justify-center gap-2">
-                  Ver Actividades
-                </button>
-              </div>
-            </div>
-            <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
-              <motion.div initial={{ opacity: 0, scale: 0.9, rotate: -2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="relative w-full max-w-md lg:max-w-full">
-                <div className="absolute inset-0 bg-blue-500/30 rounded-2xl blur-3xl transform translate-y-4 translate-x-4"></div>
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 bg-white/5 backdrop-blur-sm cursor-pointer group" onClick={() => setIsLightboxOpen(true)}>
-                  <img src={HERO_IMAGE} alt="Jornada Institucional - Click para ampliar" className="w-full h-auto object-cover rounded-2xl group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300 bg-white/20 backdrop-blur-md rounded-full p-4">
-                      <ZoomIn size={32} className="text-white" />
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-sm z-50 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="setActiveTab('home')">
+                    <img src="https://images4.imagebam.com/ad/a4/9c/ME1C83QR_o.png" alt="Logo Colegio" class="h-14 w-auto object-contain" />
+                    <div class="hidden md:block">
+                        <h1 class="text-sm font-bold text-slate-800 leading-tight">Colegio Secundario Nº5085</h1>
+                        <p class="text-xs text-slate-500">"Dr. Mariano Moreno"</p>
                     </div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                    <p className="text-white font-medium text-sm">Jornada Institucional - Click para ampliar</p>
-                  </div>
                 </div>
-                <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }} className="absolute -top-6 -right-6 bg-yellow-400 text-yellow-900 font-bold py-2 px-4 rounded-lg shadow-lg z-20 text-xs uppercase tracking-wider hidden sm:block">
-                  Habilidades Socioemocionales
-                </motion.div>
-              </motion.div>
+                <nav class="hidden md:flex space-x-1" id="desktop-nav"></nav>
+                <div class="md:hidden">
+                    <button onclick="toggleMenu()" class="p-2 text-slate-600" id="menu-btn"></button>
+                </div>
             </div>
-          </div>
         </div>
-      </motion.div>
-      <ImageLightbox isOpen={isLightboxOpen} onClose={() => setIsLightboxOpen(false)} imageUrl={HERO_IMAGE} />
-    </>
-  );
-};
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200"></div>
+    </header>
 
-const AgreementSection = () => (
-  <div className="max-w-7xl mx-auto px-4 py-12">
-    <div className="text-center mb-12">
-      <h2 className="text-3xl font-bold text-slate-900">Acuerdo de Convivencia 2026</h2>
-      <p className="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
-        Normativas fundamentales para garantizar un ambiente armónico y propicio para el aprendizaje en el Colegio Dr. Mariano Moreno.
-      </p>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-      {AGREEMENT_SUMMARY.map((section, idx) => (
-        <motion.div key={idx} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.1 }}
-          className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-50 rounded-lg">{section.icon}</div>
-            <h3 className="text-xl font-bold text-slate-800">{section.title}</h3>
-          </div>
-          <ul className="space-y-3">
-            {section.points.map((point, pIdx) => (
-              <li key={pIdx} className="flex items-start gap-3 text-slate-600">
-                <span className="mt-1.5 w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span><span>{point}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-      ))}
-    </div>
-    <div className="bg-indigo-50 rounded-2xl p-8 text-center border border-indigo-100">
-      <h3 className="text-xl font-bold text-indigo-900 mb-4">¿Necesitas el documento completo?</h3>
-      <p className="text-indigo-700 mb-6">Descarga el reglamento oficial detallado con todas las normativas y procedimientos.</p>
-      <a href={DRIVE_LINKS.agreement} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-        <Download size={20} /> Descargar PDF Completo
-      </a>
-    </div>
-  </div>
-);
+    <!-- Main Content -->
+    <main class="pt-20 min-h-[calc(100vh-300px)]" id="main-content"></main>
 
-const ActivitiesSection = () => {
-  const [activeCycle, setActiveCycle] = useState('basico');
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold text-slate-900">Actividades de la Jornada</h2>
-        <p className="mt-4 text-lg text-slate-600">Propuestas pedagógicas diferenciadas por ciclo para abordar la convivencia y las emociones.</p>
-      </div>
-      <div className="flex justify-center mb-10">
-        <div className="bg-slate-100 p-1 rounded-xl inline-flex">
-          <button onClick={() => setActiveCycle('basico')} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCycle === 'basico' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Ciclo Básico (1º - 3º)</button>
-          <button onClick={() => setActiveCycle('orientado')} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCycle === 'orientado' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Ciclo Orientado (4º - 5º)</button>
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox fixed inset-0 z-[100] items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-pointer" onclick="closeLightbox()">
+        <div class="relative w-full max-w-5xl scale-in" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="" alt="Vista completa" class="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+            <button onclick="closeLightbox()" class="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <AnimatePresence mode='wait'>
-          {CYCLE_ACTIVITIES[activeCycle].map((activity, idx) => (
-            <motion.div key={`${activeCycle}-${idx}`} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col h-full hover:border-blue-300 transition-colors group">
-              <div className="bg-blue-600 h-2 w-full"></div>
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs font-bold tracking-wider text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded">{activity.module}</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 py-12 mt-12">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <img src="https://images4.imagebam.com/ad/a4/9c/ME1C83QR_o.png" alt="Logo Footer" class="h-10 w-auto brightness-0 invert" />
+                    <span class="font-bold text-white">Colegio N° 5085</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-blue-700 transition-colors">{activity.title}</h3>
-                <p className="text-slate-600 mb-4 flex-1">{activity.desc}</p>
-                <div className="pt-4 border-t border-slate-100 mt-auto">
-                  <p className="text-sm font-medium text-slate-500 flex items-center gap-2"><Heart size={14} className="text-red-400" /> Objetivo: {activity.goal}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-      <div className="mt-16 bg-slate-900 text-white rounded-2xl p-8 md:p-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
-        <div className="relative z-10">
-          <h3 className="text-2xl font-bold mb-6 flex items-center gap-3"><Lightbulb className="text-yellow-400" /> Propuestas de Mejora al Acuerdo</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PROPOSALS.map((prop, i) => (<div key={i} className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/10"><p className="text-blue-100 text-sm leading-relaxed">{prop}</p></div>))}
-          </div>
-          <div className="mt-8"><a href={DRIVE_LINKS.activities} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-300 hover:text-white underline decoration-blue-300/50 underline-offset-4">Ver detalles completos de las actividades en PDF →</a></div>
+                <p class="text-sm text-slate-400">
+                    Gral. Güemes, Salta.<br/>
+                    Tel. 0387-4911345
+                </p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Enlaces Rápidos</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="https://drive.google.com/file/d/1EDjvRnSooKPfLru5vbMaauJYZ3a0GvIr/view?usp=sharing" target="_blank" rel="noreferrer" class="hover:text-white">Acuerdo de Convivencia</a></li>
+                    <li><a href="https://drive.google.com/file/d/1WeEfOx4G6MKDlUkdlkyAoQUjggFLkuqu/view?usp=sharing" target="_blank" rel="noreferrer" class="hover:text-white">Informe de Jornada</a></li>
+                    <li><a href="http://www.colegio5085.com.ar" target="_blank" rel="noreferrer" class="hover:text-white">Sitio Web Oficial</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Ministerio</h4>
+                <p class="text-sm text-slate-400">
+                    Ministerio de Educación, Cultura, Ciencia y Tecnología de Salta.
+                </p>
+            </div>
         </div>
-      </div>
-    </div>
-  );
-};
-
-const ReportSection = () => (
-  <div className="max-w-4xl mx-auto px-4 py-12">
-    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-      <div className="bg-slate-50 p-8 border-b border-slate-100 text-center">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Informe de Jornada Institucional</h2>
-        <p className="text-slate-500">Martes 14 de abril de 2026 • General Güemes, Salta</p>
-      </div>
-      <div className="p-8 space-y-8">
-        <section>
-          <h3 className="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2"><CheckCircle2 size={20} /> Introducción</h3>
-          <p className="text-slate-700 leading-relaxed">El pasado martes 14 de abril, el Colegio Secundario Nº 5085 llevó a cabo una jornada dedicada a los Acuerdos Escolares de Convivencia y el Desarrollo de Habilidades Socioemocionales. El objetivo central fue que los estudiantes no solo den cumplimiento a las normas, sino que desarrollen capacidades fundamentales como la autoestima, la autonomía, la autoconciencia, la empatía y la capacidad de proyectarse positivamente en la sociedad.</p>
-        </section>
-        <section>
-          <h3 className="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2"><Users size={20} /> Producciones Estudiantiles</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {["Infografías en afiches y representaciones de role-playing", "Historietas o cómics y frases con mensajes para mostrar formas saludables de expresar emociones", "Videos breves que representaron las situaciones de los casos planteados y su resolución", "Mapas de fortalezas individuales con aportes de los compañeros"].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg"><div className="w-2 h-2 bg-blue-500 rounded-full"></div><span className="text-slate-700 font-medium text-sm">{item}</span></div>
-            ))}
-          </div>
-        </section>
-        <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
-          <p className="text-slate-600 mb-4">Para leer el informe detallado con todos los resultados y conclusiones:</p>
-          <a href={DRIVE_LINKS.report} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-900 transition-colors"><FileText size={18} /> Leer Informe Completo</a>
+        <div class="border-t border-slate-800 mt-8 pt-8 text-center text-xs text-slate-500">
+            © 2026 Colegio Secundario Nº5085 "Dr. Mariano Moreno". Todos los derechos reservados.
         </div>
-      </div>
-    </div>
-  </div>
-);
+    </footer>
 
-const GallerySection = () => (
-  <div className="max-w-7xl mx-auto px-4 py-12">
-    <div className="text-center mb-12">
-      <h2 className="text-3xl font-bold text-slate-900">Galería Multimedia</h2>
-      <p className="mt-4 text-lg text-slate-600">Momentos destacados de la jornada, trabajos prácticos y participación estudiantil.</p>
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[1, 2, 3, 4, 5, 6].map((item) => (
-        <motion.a key={item} href={DRIVE_LINKS.photos} target="_blank" rel="noopener noreferrer" whileHover={{ y: -5 }} className="group relative aspect-video bg-slate-200 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md">
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-400">{item % 2 === 0 ? <ImageIcon size={48} /> : <PlayCircle size={48} />}</div>
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end p-4">
-            <span className="text-white font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all">{item % 2 === 0 ? "Ver Foto" : "Ver Video"}</span>
-          </div>
-        </motion.a>
-      ))}
-    </div>
-    <div className="mt-12 text-center"><a href={DRIVE_LINKS.photos} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-800 transition-colors">Acceder a la carpeta completa de Google Drive <ExternalLink size={18} /></a></div>
-  </div>
-);
+    <script>
+        // Data
+        const SCHOOL_LOGO = "https://images4.imagebam.com/ad/a4/9c/ME1C83QR_o.png";
+        const HERO_IMAGE = "https://images4.imagebam.com/fc/f1/65/ME1C83WU_o.png";
+        const DRIVE_LINKS = {
+            agreement: "https://drive.google.com/file/d/1EDjvRnSooKPfLru5vbMaauJYZ3a0GvIr/view?usp=sharing",
+            report: "https://drive.google.com/file/d/1WeEfOx4G6MKDlUkdlkyAoQUjggFLkuqu/view?usp=sharing",
+            activities: "https://drive.google.com/file/d/1AsNcLWHZ6RPBl7pCQpvfWQXINeksYQwZ/view?usp=sharing",
+            photos: "https://drive.google.com/drive/folders/1OvhVNqp7dBnrmXxDOGihXf_7X69yuVQ6?usp=sharing"
+        };
 
-const Footer = () => (
-  <footer className="bg-slate-900 text-slate-300 py-12 mt-12">
-    <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div>
-        <div className="flex items-center gap-3 mb-4"><img src={SCHOOL_LOGO} alt="Logo Footer" className="h-10 w-auto brightness-0 invert" /><span className="font-bold text-white">Colegio N° 5085</span></div>
-        <p className="text-sm text-slate-400">Gral. Güemes, Salta.<br/>Tel. 0387-4911345</p>
-      </div>
-      <div>
-        <h4 className="text-white font-bold mb-4">Enlaces Rápidos</h4>
-        <ul className="space-y-2 text-sm">
-          <li><a href={DRIVE_LINKS.agreement} target="_blank" rel="noreferrer" className="hover:text-white">Acuerdo de Convivencia</a></li>
-          <li><a href={DRIVE_LINKS.report} target="_blank" rel="noreferrer" className="hover:text-white">Informe de Jornada</a></li>
-          <li><a href="http://www.colegio5085.com.ar" target="_blank" rel="noreferrer" className="hover:text-white">Sitio Web Oficial</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 className="text-white font-bold mb-4">Ministerio</h4>
-        <p className="text-sm text-slate-400">Ministerio de Educación, Cultura, Ciencia y Tecnología de Salta.</p>
-      </div>
-    </div>
-    <div className="border-t border-slate-800 mt-8 pt-8 text-center text-xs text-slate-500">© 2026 Colegio Secundario Nº5085 "Dr. Mariano Moreno". Todos los derechos reservados.</div>
-  </footer>
-);
+        let activeTab = 'home';
+        let isMenuOpen = false;
+        let activeCycle = 'basico';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+        const navItems = [
+            { id: 'home', label: 'Inicio' },
+            { id: 'agreement', label: 'Acuerdo 2026' },
+            { id: 'activities', label: 'La Jornada' },
+            { id: 'report', label: 'Informe' },
+            { id: 'gallery', label: 'Galería' }
+        ];
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTab]);
+        const AGREEMENT_SUMMARY = [
+            {
+                title: "Actos y Símbolos Patrios",
+                icon: "shield",
+                points: [
+                    "Respetar símbolos patrios y entonar el Himno Nacional.",
+                    "Fomentar el buen comportamiento en ceremonias.",
+                    "No consumir alimentos durante los actos."
+                ]
+            },
+            {
+                title: "Patrimonio Escolar",
+                icon: "book-open",
+                points: [
+                    "Cuidar y conservar los bienes del patrimonio escolar.",
+                    "Reponer económicamente lo dañado intencionalmente.",
+                    "Asegurar motos/bicicletas (no ingresan al edificio)."
+                ]
+            },
+            {
+                title: "Convivencia Digital",
+                icon: "lightbulb",
+                points: [
+                    "Prohibida la difusión de material que perjudique a la comunidad.",
+                    "Sanciones severas por grabación de peleas o burlas.",
+                    "Uso de celulares solo con fines pedagógicos autorizados."
+                ]
+            },
+            {
+                title: "Presentación y Asistencia",
+                icon: "users",
+                points: [
+                    "Uniforme obligatorio (detallado para señoritas y varones).",
+                    "Puntualidad: Turno Mañana 7:45 / Tarde 13:30.",
+                    "No uso de gorras, capuchas, ni adornos llamativos."
+                ]
+            }
+        ];
 
-  return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="pt-20 min-h-[calc(100vh-300px)]">
-        <AnimatePresence mode="wait">
-          {activeTab === 'home' && (
-            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <HeroSection setActiveTab={setActiveTab} />
-              <div className="py-16 bg-white">
-                <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8 text-center">
-                  <div className="p-6"><div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><Shield size={32} /></div><h3 className="font-bold text-lg mb-2">Convivencia Segura</h3><p className="text-slate-600 text-sm">Normas claras para proteger el bienestar de toda la comunidad educativa.</p></div>
-                  <div className="p-6"><div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><Heart size={32} /></div><h3 className="font-bold text-lg mb-2">Habilidades Socioemocionales</h3><p className="text-slate-600 text-sm">Desarrollo de empatía, resiliencia y gestión emocional.</p></div>
-                  <div className="p-6"><div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-600"><Users size={32} /></div><h3 className="font-bold text-lg mb-2">Participación Activa</h3><p className="text-slate-600 text-sm">Los estudiantes son protagonistas en la construcción de acuerdos.</p></div>
+        const CYCLE_ACTIVITIES = {
+            basico: [
+                { module: "Módulo 1", title: "Revisión del Acuerdo", desc: "Análisis crítico de normas actuales. Caso: Grabación viral sin consentimiento.", goal: "Proponer adecuaciones para el bienestar escolar." },
+                { module: "Módulo 2", title: "Resolución de Conflictos", desc: "Role-playing sobre casos reales (exclusión, hostilidad deportiva).", goal: "Desarrollar habilidades para la resolución pacífica." },
+                { module: "Módulo 3", title: "El Camino de las Emociones", desc: "Tarjetas de emociones (ira, vergüenza) ante situaciones cotidianas.", goal: "Reconocer y regular emociones intensas." }
+            ],
+            orientado: [
+                { module: "Módulo 1", title: "Construyendo Resiliencia", desc: "Análisis de fracaso académico y rechazo laboral. Reestructuración cognitiva.", goal: "Fortalecer tolerancia a la frustración." },
+                { module: "Módulo 2", title: "La Isla de los Talentos", desc: "Dinámica de supervivencia asignando roles según fortalezas individuales.", goal: "Fomentar autoconfianza y trabajo en equipo." },
+                { module: "Módulo 3", title: "Mi Proyecto de Vida", desc: "Redacción de plan de vida: Identidad, entorno, metas y apoyos.", goal: "Integrar lo aprendido en un plan futuro." }
+            ]
+        };
+
+        const PROPOSALS = [
+            "Actividades de reparación/remediales con sentido de aprendizaje.",
+            "Carta de intención o compromiso formal tras faltas graves.",
+            "Prevención específica del ciberacoso y violencia digital."
+        ];
+
+        // Helper functions
+        function renderIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            renderMenu();
+        }
+
+        function setActiveTab(tab) {
+            activeTab = tab;
+            isMenuOpen = false;
+            renderHeader();
+            renderContent();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setActiveCycle(cycle) {
+            activeCycle = cycle;
+            renderActivitiesSection();
+        }
+
+        function openLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            document.getElementById('lightbox-img').src = HERO_IMAGE;
+            lightbox.classList.add('active');
+            lightbox.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            lightbox.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Render Header
+        function renderHeader() {
+            const desktopNav = document.getElementById('desktop-nav');
+            desktopNav.innerHTML = navItems.map(item => `
+                <button onclick="setActiveTab('${item.id}')"
+                    class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                        activeTab === item.id 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'
+                    }">
+                    ${item.label}
+                </button>
+            `).join('');
+
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (isMenuOpen) {
+                mobileMenu.classList.remove('hidden');
+                mobileMenu.innerHTML = `
+                    <div class="px-4 pt-2 pb-6 space-y-2">
+                        ${navItems.map(item => `
+                            <button onclick="setActiveTab('${item.id}')"
+                                class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium ${
+                                    activeTab === item.id 
+                                        ? 'bg-blue-50 text-blue-700' 
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                }">
+                                ${item.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.innerHTML = '';
+            }
+
+            const menuBtn = document.getElementById('menu-btn');
+            menuBtn.innerHTML = isMenuOpen ? '<i data-lucide="x" class="w-6 h-6"></i>' : '<i data-lucide="menu" class="w-6 h-6"></i>';
+            renderIcons();
+        }
+
+        // Render Hero Section
+        function renderHeroSection() {
+            return `
+                <div class="fade-in">
+                    <div class="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
+                        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 lg:py-24">
+                            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                                <div class="text-center lg:text-left order-2 lg:order-1 slide-up">
+                                    <div class="inline-block mb-6 p-1 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                                        <span class="px-4 py-1 text-sm font-semibold tracking-wide uppercase text-blue-100">Jornada Abril 2026</span>
+                                    </div>
+                                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+                                        Acuerdos de <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-cyan-200">Convivencia Institucional</span>
+                                    </h1>
+                                    <p class="mt-4 text-lg text-blue-100 mb-8 max-w-2xl mx-auto lg:mx-0">
+                                        Construyendo una comunidad educativa basada en el respeto, la empatía y el desarrollo de habilidades socioemocionales en el Colegio Dr. Mariano Moreno.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                        <button onclick="setActiveTab('agreement')" class="px-8 py-4 bg-white text-blue-900 rounded-lg font-bold hover:bg-blue-50 transition-colors shadow-lg flex items-center justify-center gap-2 group">
+                                            Ver Acuerdo 2026 <i data-lucide="chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                                        </button>
+                                        <button onclick="setActiveTab('activities')" class="px-8 py-4 bg-blue-700/50 backdrop-blur-sm border border-blue-400/30 text-white rounded-lg font-bold hover:bg-blue-700/70 transition-colors flex items-center justify-center gap-2">
+                                            Ver Actividades
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="order-1 lg:order-2 flex justify-center lg:justify-end slide-in-left">
+                                    <div class="relative w-full max-w-md lg:max-w-full">
+                                        <div class="absolute inset-0 bg-blue-500/30 rounded-2xl blur-3xl transform translate-y-4 translate-x-4"></div>
+                                        <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 bg-white/5 backdrop-blur-sm cursor-pointer group" onclick="openLightbox()">
+                                            <img src="${HERO_IMAGE}" alt="Jornada Institucional - Click para ampliar" class="w-full h-auto object-cover rounded-2xl group-hover:scale-105 transition-transform duration-700" />
+                                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                <div class="opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition-all duration-300 bg-white/20 backdrop-blur-md rounded-full p-4">
+                                                    <i data-lucide="zoom-in" class="w-8 h-8 text-white"></i>
+                                                </div>
+                                            </div>
+                                            <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                                                <p class="text-white font-medium text-sm">Jornada Institucional - Click para ampliar</p>
+                                            </div>
+                                        </div>
+                                        <div class="absolute -top-6 -right-6 bg-yellow-400 text-yellow-900 font-bold py-2 px-4 rounded-lg shadow-lg z-20 text-xs uppercase tracking-wider hidden sm:block float-animation">
+                                            Habilidades Socioemocionales
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="py-16 bg-white">
+                        <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8 text-center">
+                            <div class="p-6 slide-up" style="animation-delay: 0.1s">
+                                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><i data-lucide="shield" class="w-8 h-8"></i></div>
+                                <h3 class="font-bold text-lg mb-2">Convivencia Segura</h3>
+                                <p class="text-slate-600 text-sm">Normas claras para proteger el bienestar de toda la comunidad educativa.</p>
+                            </div>
+                            <div class="p-6 slide-up" style="animation-delay: 0.2s">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><i data-lucide="heart" class="w-8 h-8"></i></div>
+                                <h3 class="font-bold text-lg mb-2">Habilidades Socioemocionales</h3>
+                                <p class="text-slate-600 text-sm">Desarrollo de empatía, resiliencia y gestión emocional.</p>
+                            </div>
+                            <div class="p-6 slide-up" style="animation-delay: 0.3s">
+                                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-600"><i data-lucide="users" class="w-8 h-8"></i></div>
+                                <h3 class="font-bold text-lg mb-2">Participación Activa</h3>
+                                <p class="text-slate-600 text-sm">Los estudiantes son protagonistas en la construcción de acuerdos.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-          {activeTab === 'agreement' && (<motion.div key="agreement" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><AgreementSection /></motion.div>)}
-          {activeTab === 'activities' && (<motion.div key="activities" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><ActivitiesSection /></motion.div>)}
-          {activeTab === 'report' && (<motion.div key="report" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><ReportSection /></motion.div>)}
-          {activeTab === 'gallery' && (<motion.div key="gallery" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><GallerySection /></motion.div>)}
-        </AnimatePresence>
-      </main>
-      <Footer />
-    </div>
-  );
-}
+            `;
+        }
+
+        // Render Agreement Section
+        function renderAgreementSection() {
+            const cards = AGREEMENT_SUMMARY.map((section, idx) => `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow slide-up" style="animation-delay: ${idx * 0.1}s">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="p-3 bg-blue-50 rounded-lg"><i data-lucide="${section.icon}" class="w-6 h-6 text-blue-600"></i></div>
+                        <h3 class="text-xl font-bold text-slate-800">${section.title}</h3>
+                    </div>
+                    <ul class="space-y-3">
+                        ${section.points.map(point => `
+                            <li class="flex items-start gap-3 text-slate-600">
+                                <span class="mt-1.5 w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                                <span>${point}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+            return `
+                <div class="fade-in max-w-7xl mx-auto px-4 py-12">
+                    <div class="text-center mb-12 slide-up">
+                        <h2 class="text-3xl font-bold text-slate-900">Acuerdo de Convivencia 2026</h2>
+                        <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+                            Normativas fundamentales para garantizar un ambiente armónico y propicio para el aprendizaje en el Colegio Dr. Mariano Moreno.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                        ${cards}
+                    </div>
+                    <div class="bg-indigo-50 rounded-2xl p-8 text-center border border-indigo-100 slide-up">
+                        <h3 class="text-xl font-bold text-indigo-900 mb-4">¿Necesitas el documento completo?</h3>
+                        <p class="text-indigo-700 mb-6">Descarga el reglamento oficial detallado con todas las normativas y procedimientos.</p>
+                        <a href="${DRIVE_LINKS.agreement}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                            <i data-lucide="download" class="w-5 h-5"></i> Descargar PDF Completo
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Activities Section
+        function renderActivitiesSection() {
+            const cards = CYCLE_ACTIVITIES[activeCycle].map((activity, idx) => `
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col h-full hover:border-blue-300 transition-colors group slide-up" style="animation-delay: ${idx * 0.1}s">
+                    <div class="bg-blue-600 h-2 w-full"></div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold tracking-wider text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded">${activity.module}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-blue-700 transition-colors">${activity.title}</h3>
+                        <p class="text-slate-600 mb-4 flex-1">${activity.desc}</p>
+                        <div class="pt-4 border-t border-slate-100 mt-auto">
+                            <p class="text-sm font-medium text-slate-500 flex items-center gap-2">
+                                <i data-lucide="heart" class="w-3.5 h-3.5 text-red-400"></i>
+                                Objetivo: ${activity.goal}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="fade-in max-w-7xl mx-auto px-4 py-12">
+                    <div class="text-center mb-10 slide-up">
+                        <h2 class="text-3xl font-bold text-slate-900">Actividades de la Jornada</h2>
+                        <p class="mt-4 text-lg text-slate-600">Propuestas pedagógicas diferenciadas por ciclo para abordar la convivencia y las emociones.</p>
+                    </div>
+                    <div class="flex justify-center mb-10 slide-up">
+                        <div class="bg-slate-100 p-1 rounded-xl inline-flex">
+                            <button onclick="setActiveCycle('basico')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCycle === 'basico' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}">Ciclo Básico (1º - 3º)</button>
+                            <button onclick="setActiveCycle('orientado')" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCycle === 'orientado' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}">Ciclo Orientado (4º - 5º)</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${cards}
+                    </div>
+                    <div class="mt-16 bg-slate-900 text-white rounded-2xl p-8 md:p-12 relative overflow-hidden slide-up">
+                        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
+                        <div class="relative z-10">
+                            <h3 class="text-2xl font-bold mb-6 flex items-center gap-3"><i data-lucide="lightbulb" class="text-yellow-400"></i> Propuestas de Mejora al Acuerdo</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                ${PROPOSALS.map(prop => `
+                                    <div class="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/10">
+                                        <p class="text-blue-100 text-sm leading-relaxed">${prop}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="mt-8">
+                                <a href="${DRIVE_LINKS.activities}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-300 hover:text-white underline decoration-blue-300/50 underline-offset-4">Ver detalles completos de las actividades en PDF →</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Report Section
+        function renderReportSection() {
+            return `
+                <div class="fade-in max-w-4xl mx-auto px-4 py-12">
+                    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                        <div class="bg-slate-50 p-8 border-b border-slate-100 text-center slide-up">
+                            <h2 class="text-3xl font-bold text-slate-900 mb-2">Informe de Jornada Institucional</h2>
+                            <p class="text-slate-500">Martes 14 de abril de 2026 • General Güemes, Salta</p>
+                        </div>
+                        <div class="p-8 space-y-8">
+                            <div class="slide-up">
+                                <h3 class="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Introducción</h3>
+                                <p class="text-slate-700 leading-relaxed">El pasado martes 14 de abril, el Colegio Secundario Nº 5085 llevó a cabo una jornada dedicada a los Acuerdos Escolares de Convivencia y el Desarrollo de Habilidades Socioemocionales. El objetivo central fue que los estudiantes no solo den cumplimiento a las normas, sino que desarrollen capacidades fundamentales como la autoestima, la autonomía, la autoconciencia, la empatía y la capacidad de proyectarse positivamente en la sociedad.</p>
+                            </div>
+                            <div class="slide-up">
+                                <h3 class="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2"><i data-lucide="users" class="w-5 h-5"></i> Producciones Estudiantiles</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    ${[
+                                        "Infografías en afiches y representaciones de role-playing",
+                                        "Historietas o cómics y frases con mensajes para mostrar formas saludables de expresar emociones",
+                                        "Videos breves que representaron las situaciones de los casos planteados y su resolución",
+                                        "Mapas de fortalezas individuales con aportes de los compañeros"
+                                    ].map((item, i) => `
+                                        <div class="flex items-center gap-3 bg-blue-50 p-3 rounded-lg">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                            <span class="text-slate-700 font-medium text-sm">${item}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center slide-up">
+                                <p class="text-slate-600 mb-4">Para leer el informe detallado con todos los resultados y conclusiones:</p>
+                                <a href="${DRIVE_LINKS.report}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-900 transition-colors">
+                                    <i data-lucide="file-text" class="w-4.5 h-4.5"></i> Leer Informe Completo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Gallery Section
+        function renderGallerySection() {
+            const items = Array(6).fill(null).map((_, idx) => `
+                <a href="${DRIVE_LINKS.photos}" target="_blank" rel="noopener noreferrer" class="group relative aspect-video bg-slate-200 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md hover-scale slide-up" style="animation-delay: ${idx * 0.1}s">
+                    <div class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-400">
+                        ${idx % 2 === 0 ? '<i data-lucide="image" class="w-12 h-12"></i>' : '<i data-lucide="play-circle" class="w-12 h-12"></i>'}
+                    </div>
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end p-4">
+                        <span class="text-white font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all">
+                            ${idx % 2 === 0 ? 'Ver Foto' : 'Ver Video'}
+                        </span>
+                    </div>
+                </a>
+            `).join('');
+
+            return `
+                <div class="fade-in max-w-7xl mx-auto px-4 py-12">
+                    <div class="text-center mb-12 slide-up">
+                        <h2 class="text-3xl font-bold text-slate-900">Galería Multimedia</h2>
+                        <p class="mt-4 text-lg text-slate-600">Momentos destacados de la jornada, trabajos prácticos y participación estudiantil.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${items}
+                    </div>
+                    <div class="mt-12 text-center slide-up">
+                        <a href="${DRIVE_LINKS.photos}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-800 transition-colors">
+                            Acceder a la carpeta completa de Google Drive <i data-lucide="external-link" class="w-4.5 h-4.5"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Content
+        function renderContent() {
+            const mainContent = document.getElementById('main-content');
+            switch (activeTab) {
+                case 'home':
+                    mainContent.innerHTML = renderHeroSection();
+                    break;
+                case 'agreement':
+                    mainContent.innerHTML = renderAgreementSection();
+                    break;
+                case 'activities':
+                    mainContent.innerHTML = renderActivitiesSection();
+                    break;
+                case 'report':
+                    mainContent.innerHTML = renderReportSection();
+                    break;
+                case 'gallery':
+                    mainContent.innerHTML = renderGallerySection();
+                    break;
+            }
+            renderIcons();
+        }
+
+        // Initialize
+        function init() {
+            renderHeader();
+            renderContent();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
